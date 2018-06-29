@@ -135,22 +135,19 @@ const onMouseleave = ev => {
 const createHtml = item => {
     const $html = dom(itemTpl);
     const $a = $html.find('a');
-    const $iconImg = $html.find('.icon img');
+    const $icon = $html.find('.icon');
+    const $iconImg = $icon.find('.icon img');
     const $label = $html.find('.label');
     const $date = $html.find('.date');
     const $size = $html.find('.size');
 
-    if (item.isFolder()){
-        $html.addCls('folder');
-    } else {
-        $html
-            .addCls('file')
-            .addCls(item.type);
-    }
 
     $html
+        .addCls(item.isFolder() ? 'folder' : 'file')
         .on('mouseenter', onMouseenter)
         .on('mouseleave', onMouseleave);
+
+    $icon.addCls(item.isFolder() ? 'folder' : item.type);
 
     location.setLink($a, item);
 

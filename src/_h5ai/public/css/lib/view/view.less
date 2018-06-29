@@ -49,6 +49,33 @@
             max-width: none;
             max-height: none;
         }
+
+        &[class*="vid-"] {
+            &::after {
+                background-image:
+                    linear-gradient(#fff 40%, transparent 40%),
+                    linear-gradient(#fff 40%, transparent 40%);
+                background-position: top 27% left 6%,top 27% right 6%;
+                background-repeat: repeat-y;
+                background-size: 8% 25%;
+                content: "";
+                display: block;
+                opacity: .8;
+                padding-bottom: 75%;
+                position: absolute;
+                top: 0;
+                width: 100%;
+            }
+
+            &.square[class*="vid-"] {
+                &::after {
+                    background-size: 8% 17%;
+                    height: 100%;
+                    padding-bottom: 0;
+                    width: inherit;
+                }
+            }
+        }
     }
 
     .label {

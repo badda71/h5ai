@@ -69,7 +69,7 @@
         "hideFolders": false,
         "hideIf403": true,
         "hideParentFolder": false,
-        "maxIconSize": 40,
+        "maxIconSize": 300,
         "modes": ["details", "grid", "icons"],
         "modeToggle": false,
         "setParentFolderLabels": true,

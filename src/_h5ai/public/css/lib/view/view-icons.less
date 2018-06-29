@@ -32,21 +32,6 @@
         &:hover {
             .raised;
         }
-
-        &[class*="vid-"] {
-            &::after {
-                content: "";
-                top: 0;
-                position: absolute;
-                display: block;
-                width: 100%;
-                height: ~"calc(100% - 2.4em)";
-                background:
-                    ~"linear-gradient(#fff 40%, transparent 40%) top 5% left 5% / 5% 15%",
-                    ~"linear-gradient(#fff 40%, transparent 40%) top 5% right 5% / 5% 15%";
-                background-repeat: repeat-y;
-            }
-        }
     }
 
     .landscape {
