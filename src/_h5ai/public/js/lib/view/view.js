@@ -140,8 +140,15 @@ const createHtml = item => {
     const $date = $html.find('.date');
     const $size = $html.find('.size');
 
+    if (item.isFolder()){
+        $html.addCls('folder');
+    } else {
+        $html
+            .addCls('file')
+            .addCls(item.type);
+    }
+
     $html
-        .addCls(item.isFolder() ? 'folder' : 'file')
         .on('mouseenter', onMouseenter)
         .on('mouseleave', onMouseleave);
 
