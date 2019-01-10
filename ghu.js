@@ -73,6 +73,7 @@ ghu.task('build:scripts', runtime => {
         .then(wrap('\n\n// @include "pre.js"\n\n'))
         .then(includeit())
         .then(ife(() => runtime.args.production, uglify({compressor: {warnings: false}})))
+//        .then(ife(() => runtime.args.production))
         .then(wrap(runtime.commentJs))
         .then(write(mapper, {overwrite: true}));
 });

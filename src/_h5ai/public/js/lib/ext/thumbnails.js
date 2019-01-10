@@ -4,14 +4,15 @@ const event = require('../core/event');
 const allsettings = require('../core/settings');
 
 const settings = Object.assign({
-    enabled: false,
-    img: ['img-bmp', 'img-gif', 'img-ico', 'img-jpg', 'img-png'],
-    mov: ['vid-avi', 'vid-flv', 'vid-mkv', 'vid-mov', 'vid-mp4', 'vid-mpg', 'vid-webm'],
-    doc: ['x-pdf', 'x-ps'],
-    delay: 1,
-    size: 100,
-    exif: false,
-    chunksize: 20
+	enabled: false,
+	types: {
+		img: ['img-bmp', 'img-gif', 'img-ico', 'img-jpg', 'img-png'],
+		mov: ['vid-avi', 'vid-flv', 'vid-mkv', 'vid-mov', 'vid-mp4', 'vid-mpg', 'vid-webm'],
+		doc: ['x-pdf', 'x-ps'] },
+	delay: 1,
+	size: 100,
+	exif: false,
+	chunksize: 20
 }, allsettings.thumbnails);
 const landscapeRatio = 4 / 3;
 
@@ -19,15 +20,12 @@ const landscapeRatio = 4 / 3;
 const queueItem = (queue, item) => {
     let type = null;
 
-    if (includes(settings.img, item.type)) {
-        type = 'img';
-    } else if (includes(settings.mov, item.type)) {
-        type = 'mov';
-    } else if (includes(settings.doc, item.type)) {
-        type = 'doc';
-    } else {
-        return;
-    }
+	for(let i in settings.types) {
+		if (includes(settings.types[i], item.type)) {
+			type = i; break;
+		}
+	}
+	if (type==null) return;
 
     if (item.thumbSquare) {
         item.$view.find('.icon.square img').addCls('thumb').attr('src', item.thumbSquare);

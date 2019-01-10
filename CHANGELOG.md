@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.30.0 - *2019-01-09*
+
+* revamp of thumbnailing system
+* add support for directory-specific config files
+* multiple small enhancements
 
 ## v0.29.0 - *2016-08-12*
 

@@ -1,14 +1,14 @@
 {
   "name": "h5ai",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "description": "Modern HTTP web server index.",
-  "homepage": "https://larsjung.de/h5ai/",
-  "bugs": "https://github.com/lrsjng/h5ai/issues",
-  "author": "Lars Jung <lrsjng@gmail.com> (https://larsjung.de)",
+  "homepage": "https://github.com/badda71/h5ai",
+  "bugs": "https://github.com/badda71/h5ai/issues",
+  "author": "Sebastian Weber <badda71@gmail.de>, Lars Jung <lrsjng@gmail.com> (https://larsjung.de)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lrsjng/h5ai.git"
+    "url": "https://github.com/badda71/h5ai.git"
   },
   "scripts": {
     "build": "node ghu release"
@@ -21,7 +21,7 @@
     "jsdom": "9.4.2",
     "kjua": "0.1.1",
     "lolight": "0.3.0",
-    "marked": "0.3.6",
+    "marked": "^0.5.2",
     "normalize.css": "4.2.0",
     "null-loader": "0.1.1",
     "scar": "0.17.0"

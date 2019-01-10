@@ -7,7 +7,18 @@
     */
     "passhash": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
 
-
+	
+	
+	/*
+	Dynamic configuration.
+	
+	each directory can contain an additional config file which can override
+	setting from here or from config files in parent directories.
+	*/
+	"configfiles": {
+		"enabled": true,
+		"filename": ".h5ai.json"
+	},
 
     /*
     Resources.
@@ -67,19 +78,17 @@
         "fontsMono": ["Ubuntu Mono", "Monaco", "Lucida Sans Typewriter", "monospace"],
         "hidden": ["^\\.", "^_h5ai"],
         "hideFolders": false,
-        "hideIf403": true,
-        "hideParentFolder": false,
-        "maxIconSize": 300,
+        "hideIf403": false,
+        "hideParentFolder": true,
+        "maxIconSize": 40,
         "modes": ["details", "grid", "icons"],
-        "modeToggle": false,
+        "modeToggle": true,
         "setParentFolderLabels": true,
         "sizes": [20, 40, 60, 80, 100, 140, 180, 220, 260, 300],
-        "theme": "comity",
+        "theme": "default",
         "unmanaged": ["index.html", "index.htm", "index.php"],
-        "unmanagedInNewWindow": false
+        "unmanagedInNewWindow": true
     },
-
-
 
     /*** Extensions (in alphabetical order) ***/
 
@@ -123,7 +132,7 @@
     */
     "download": {
         "enabled": true,
-        "type": "php-tar",
+        "type": "shell-zip",
         "packageName": null,
         "alwaysVisible": false
     },
@@ -157,7 +166,7 @@
     - type: string, "php" (sloooow) or "shell-du" (sloow)
     */
     "foldersize": {
-        "enabled": true,
+        "enabled": false,
         "type": "php"
     },
 
@@ -181,7 +190,7 @@
     */
     "info": {
         "enabled": true,
-        "show": false,
+        "show": true,
         "qrcode": true,
         "qrFill": "#999",
         "qrBack": "#fff"
@@ -304,7 +313,7 @@
     - ignorecase: boolean, ignore case
     */
     "search": {
-        "enabled": false,
+        "enabled": true,
         "advanced": true,
         "debounceTime": 300,
         "ignorecase": true
@@ -346,30 +355,63 @@
     Show thumbnails for image files. Needs the "/_h5ai/cache" folder to be
     writable for the web Server.
 
-    - img: array of strings
-    - mov: array of strings
-    - doc: array of strings
+    - types: contains all file types that thumnails should be generated for.
+	         Maps general file types (like img or mov) to arrays of more
+			 specific mime types. Thumbnail generators can be assigned to
+			 these general file types further down.
     - delay: number, delay in milliseconds after "dom-ready" before thumb-requesting starts
     - size: number, size in pixel of the generated thumbnails
     - exif: boolean, use included EXIF thumbs if possible
     - chunksize: int, number of thumbs per request
-    */
+	- method: 1 = fill thumbnail, cut overlaping parts of image
+	          2 = fit full image to thumbnail size
+	- generators:
+		dict string to array, maps file types (img, mov, doc, folder etc.)
+		to array of thumbnail generators and an optional, dash-separated mode.
+		Each generator/mode is tried from right to left until one returns a
+		valid thumbnail. Example entry:
+		"mov" : "tmdb-mov", "tmdb-tvs", "still"
+		Tries to get a thumbnail for mov-files with generator "tmdb", mode
+		"mov", then generator "tmdb", mode "tvs" and finally generator "still"
+		(without mode).
+		Some generators require modes, some have optional modes and some
+		don't. Please check the generator class file in private/php/ext
+		
+	- generator-cfg:
+		thumbnail generator specific configurations. For details, please see
+		generator class file in private/php/ext
+	*/
     "thumbnails": {
         "enabled": true,
-        "img": ["img-bmp", "img-gif", "img-ico", "img-jpg", "img-png"],
-        "mov": ["vid-avi", "vid-flv", "vid-mkv", "vid-mov", "vid-mp4", "vid-mpg", "vid-webm"],
-        "doc": ["x-pdf", "x-ps"],
+        "types": {
+			"img": ["img-bmp", "img-gif", "img-ico", "img-jpg", "img-png"],
+			"mov": ["vid-avi", "vid-flv", "vid-mkv", "vid-mov", "vid-mp4", "vid-mpg", "vid-webm"],
+			"doc": ["x-pdf", "x-ps"],
+			"fld": ["folder"],
+			"aud": ["aud"] },
         "delay": 1,
-        "size": 240,
-        "exif": false,
-        "chunksize": 20
-    },
-
-    /*
-    Replace window title with current breadcrumb.
-    */
-    "title": {
-        "enabled": true
+        "size": 240,	
+        "chunksize": 15,
+		"method": 2,
+		"generators": {
+			"img": ["exif", "self"],
+			"mov": ["tmdb", "still"],
+			"doc": ["docthumb"],
+			"fld": ["file"],
+			"aud": ["id3"]
+		},
+		"generator-cfg": {
+			"file": {
+				"files": ["Folder.jpg","Cover.jpg"]
+			},
+			"tmdb": {
+				"api-key": "296d4c7bcf2b240a42cb1b64400cd176",
+				"language": "de-de"
+			},
+			"still": {
+				"location": "10%"
+			}
+		}
     },
 
     /*

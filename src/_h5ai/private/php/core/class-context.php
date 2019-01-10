@@ -15,12 +15,35 @@ class Context {
         $this->request = $request;
         $this->setup = $setup;
 
-        $this->options = Json::load($this->setup->get('CONF_PATH') . '/options.json');
+		$conf=$this->setup->get('CONF_PATH') . '/options.json';
+        $this->options = Json::load($conf);
+		if (json_last_error() != JSON_ERROR_NONE) die ("$conf: ".json_last_error_msg());
 
         $this->passhash = $this->query_option('passhash', '');
         $this->options['hasCustomPasshash'] = strcasecmp($this->passhash, Context::$DEFAULT_PASSHASH) !== 0;
         unset($this->options['passhash']);
-    }
+
+		// if dynamic config files are enabled in the main config, read them
+		if ($this->query_option('configfiles.enabled',false)===true) {
+			$fname=$this->query_option('configfiles.filename','.h5ai.json');
+			$req_href=$this->setup->get('REQUEST_HREF');
+			$href=$this->setup->get('ROOT_HREF');
+			if (!is_dir($this->to_path($req_href))) $req_href=dirname($req_href)."/";
+			$dirs = explode("/","/".substr($req_href, strlen($href),-1));
+			foreach ($dirs as $dir) {
+				$href.="$dir/";
+				$path=$this->to_path($href);
+//echo "<pre>Checking path $path\n";
+				if (file_exists("$path/$fname")) {
+//echo "Found another config file $path/$fname\n";
+					$newopts=Json::load("$path/$fname");
+					if (json_last_error() != JSON_ERROR_NONE) die ("$path/$fname: ".json_last_error_msg());
+					$this->options=array_replace_recursive($this->options, $newopts);
+				}
+			}
+		}
+//exit;
+	}
 
     public function get_session() {
         return $this->session;
