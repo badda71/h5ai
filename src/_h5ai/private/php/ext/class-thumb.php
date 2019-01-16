@@ -22,7 +22,7 @@ class Thumb {
             @mkdir($this->thumbs_path, 0755, true);
         }
     }
-
+	
     public function thumb($type, $source_href, $width, $height) {
         $source_path = $this->context->to_path($source_href);
 
@@ -30,7 +30,6 @@ class Thumb {
         if (!file_exists($source_path) || Util::starts_with($source_path, $this->setup->get('CACHE_PUB_PATH'))) {
             return null;
 		}
-		
 		$name = 'thumb-' . sha1($source_path) . '-' . $width . 'x' . $height . '.jpg';
         $thumb_path = $this->thumbs_path . '/' . $name;
         $thumb_href = $this->thumbs_href . '/' . $name;
@@ -38,24 +37,7 @@ class Thumb {
 			return $thumb_href;
 
 		// no thumb exists, capture an image
-		$capture_path = $this->thumbs_path . '/capture-' . sha1($source_path) . '.jpg';
-		if (!file_exists($capture_path) || filemtime($source_path)>filemtime($capture_path)) { 
-
-			foreach ($this->context->query_option("thumbnails.generators.$type", []) as $s) {
-				list($class,$mode)=explode("-","$s-");
-				$class='thumbgen_'.$class;
-
-				// get the thumbnail generator object
-				if (!($g=thumbgen::getGenerator($class,$this->context))) continue;
-				if ($mode) $g->setMode($mode);
-				$x=$g->generate($source_path, $type, $capture_path, $width, $height);
-				if ($x) {
-					$capture_path=$x;
-					break;
-				}
-			}
-		}
-		if (!file_exists($capture_path)) return null;
+		if (($capture_path=$this->capture($type,$source_path,$width,$height))==null) return null;
 
 		// create a thumbnail
 	    $image = new Image();
@@ -69,6 +51,29 @@ class Thumb {
 
 		return file_exists($thumb_path) ? $thumb_href : null;
     }
+
+	public function capture($type,$source,$minwidth,$minheight) {
+		if ($type==null && ($type=$this->context->get_thumbnailtype($source))==null) return null;
+		
+		$capture_path = $this->thumbs_path . '/capture-' . sha1($source) . '.jpg';
+		if (!file_exists($capture_path) || filemtime($source)>filemtime($capture_path)) {
+			foreach ($this->context->query_option("thumbnails.generators.$type", []) as $s) {
+				list($class,$mode)=explode("-","$s-");
+				$class='thumbgen_'.$class;
+
+				// get the thumbnail generator object
+				if (!($g=thumbgen::getGenerator($class,$this->context))) continue;
+				if ($mode) $g->setMode($mode);
+				$x=$g->generate($source, $type, $capture_path, $minwidth, $minheight);
+				if ($x) {
+					$capture_path=$x;
+					break;
+				}
+			}
+		}
+		if (!file_exists($capture_path)) return null;
+		return $capture_path;
+	}
 }
 
 class Image {
@@ -117,6 +122,7 @@ class Image {
         }
 
         $this->source = imagecreatefromstring(file_get_contents($this->source_file));
+		if ($this->source===false) $this->source=null;
 	}
 
     public function save_dest_jpeg($filename, $quality = 80) {

@@ -4,10 +4,11 @@ const {
     newerThan, pug, read, remove, run, uglify, watch, webpack, wrap, write
 } = require('ghu');
 
+var argv = require('minimist')(process.argv.slice(2));
+
 const ROOT = resolve(__dirname);
-const SRC = join(ROOT, 'src');
-const TEST = join(ROOT, 'test');
-const BUILD = join(ROOT, 'build');
+const SRC = join(ROOT, 'src/_h5ai');
+const BUILD = argv.o?argv.o:join(ROOT, 'build/_h5ai');
 
 const mapper = mapfn.p(SRC, BUILD).s('.less', '.css').s('.pug', '');
 const webpackCfg = include => ({
@@ -67,20 +68,19 @@ ghu.task('lint', 'lint all JavaScript files with eslint', () => {
 });
 
 ghu.task('build:scripts', runtime => {
-    return read(`${SRC}/_h5ai/public/js/scripts.js`)
-        .then(newerThan(mapper, `${SRC}/_h5ai/public/js/**`))
+    return read(`${SRC}/public/js/scripts.js`)
+        .then(newerThan(mapper, `${SRC}/public/js/**`))
         .then(webpack(webpackCfg([SRC]), {showStats: false}))
         .then(wrap('\n\n// @include "pre.js"\n\n'))
         .then(includeit())
         .then(ife(() => runtime.args.production, uglify({compressor: {warnings: false}})))
-//        .then(ife(() => runtime.args.production))
         .then(wrap(runtime.commentJs))
         .then(write(mapper, {overwrite: true}));
 });
 
 ghu.task('build:styles', runtime => {
-    return read(`${SRC}/_h5ai/public/css/*.less`)
-        .then(newerThan(mapper, `${SRC}/_h5ai/public/css/**`))
+    return read(`${SRC}/public/css/*.less`)
+        .then(newerThan(mapper, `${SRC}/public/css/**`))
         .then(includeit())
         .then(less())
         .then(autoprefixer())
@@ -98,7 +98,7 @@ ghu.task('build:pages', runtime => {
 });
 
 ghu.task('build:copy', runtime => {
-    const mapperRoot = mapfn.p(ROOT, join(BUILD, '_h5ai'));
+    const mapperRoot = mapfn.p(ROOT, BUILD);
 
     return Promise.all([
         read(`${SRC}/**/conf/*.json`)
@@ -121,27 +121,7 @@ ghu.task('build:copy', runtime => {
     ]);
 });
 
-ghu.task('build:tests', ['build:styles'], 'build the test suite', () => {
-    return Promise.all([
-        read(`${BUILD}/_h5ai/public/css/styles.css`)
-            .then(newerThan(`${BUILD}/test/h5ai-styles.css`))
-            .then(write(`${BUILD}/test/h5ai-styles.css`, {overwrite: true})),
-
-        read(`${TEST}/index.html`)
-            .then(newerThan(`${BUILD}/test/index.html`))
-            .then(write(`${BUILD}/test/index.html`, {overwrite: true})),
-
-        read(`${TEST}: index.js`)
-            .then(webpack(webpackCfg([SRC, TEST]), {showStats: false}))
-            .then(wrap(`\n\n// @include "${SRC}/**/js/pre.js"\n\n`))
-            .then(includeit())
-            .then(write(mapfn.p(TEST, `${BUILD}/test`), {overwrite: true}))
-    ]).then(() => {
-        console.log(`browse to file://${BUILD}/test/index.html to run the test suite`);
-    });
-});
-
-ghu.task('build', ['build:scripts', 'build:styles', 'build:pages', 'build:copy', 'build:tests'],
+ghu.task('build', ['build:scripts', 'build:styles', 'build:pages', 'build:copy'],
     'build all updated files, optionally use :production');
 
 ghu.task('deploy', ['build'], 'deploy to a specified path with :dest=/some/path', runtime => {
@@ -152,19 +132,19 @@ ghu.task('deploy', ['build'], 'deploy to a specified path with :dest=/some/path'
 
     const mapperDeploy = mapfn.p(BUILD, resolve(runtime.args.dest));
 
-    return read(`${BUILD}/_h5ai/**`)
+    return read(`${BUILD}/**`)
         .then(newerThan(mapperDeploy))
         .then(write(mapperDeploy, {overwrite: true, cluster: true}));
 });
 
 ghu.task('watch', runtime => {
-    return watch([SRC, TEST], () => ghu.run(runtime.sequence.filter(x => x !== 'watch'), runtime.args, true));
+    return watch([SRC], () => ghu.run(runtime.sequence.filter(x => x !== 'watch'), runtime.args, true));
 });
 
 ghu.task('release', ['force-production', 'clean', 'build'], 'create a zipball', runtime => {
     const target = join(BUILD, `${runtime.pkg.name}-${runtime.pkg.version}.zip`);
 
-    return read(`${BUILD}/_h5ai/**`)
+    return read(`${BUILD}/**`)
         .then(jszip({dir: BUILD, level: 9}))
         .then(write(target, {overwrite: true}));
 });

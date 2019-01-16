@@ -4,16 +4,18 @@
 //   thumbnails.generator-cfg.still.location: location of still inside the
 //     video file. Can be given as seconds (e.g. '10s') or percentage of total
 //     video length (e.g. '50%')
-// Requires: avconv or ffmpeg (package ffmepg)
+// Requires: avconv or ffmpeg (package ffmpeg)
 
 
 class thumbgen_still extends thumbgen {
 	
 	public function capture($source, $type, $capture=null, $minwidth=0, $minheight=0) {
-		
+		if ($this->setup->get('HAS_CMD_AVCONV')) $c="avconv";
+		elseif ($this->setup->get('HAS_CMD_FFMPEG')) $c="ffmpeg";
+		else return null;
+	
 		$t=$this->context->query_option('thumbnails.generator-cfg.still.location', "10s");
-		if (!preg_match('/(\d+)(s|%)/',$t,$m)) {error_log("$t: not a valid still location");return null;}
-		$c=$this->setup->get('HAS_CMD_AVCONV')?"avconv":($this->setup->get('HAS_CMD_FFMPEG')?"ffmpeg":"dummy");
+		if (!preg_match('/(\d+)(s|%)/',$t,$m)) return null;
 
 		// set up the command
 		$cmd="$c -ss ".

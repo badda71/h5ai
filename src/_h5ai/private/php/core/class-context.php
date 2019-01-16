@@ -9,7 +9,14 @@ class Context {
     private $setup;
     private $options;
     private $passhash;
+	private $types=null;
+	private $regexps=null;
+	private $thumbnailtypes=array(
+	        'img' => ['img-bmp', 'img-gif', 'img-ico', 'img-jpg', 'img-png'],
+	        'mov' => ['vid-avi', 'vid-flv', 'vid-mkv', 'vid-mov', 'vid-mp4', 'vid-mpg', 'vid-webm'],
+	        'doc' => ['x-pdf', 'x-ps']);
 
+	
     public function __construct($session, $request, $setup) {
         $this->session = $session;
         $this->request = $request;
@@ -23,6 +30,8 @@ class Context {
         $this->options['hasCustomPasshash'] = strcasecmp($this->passhash, Context::$DEFAULT_PASSHASH) !== 0;
         unset($this->options['passhash']);
 
+		$this->thumbnailtypes = $this->query_option('thumbnails.types',$this->thumbnailtypes);
+		
 		// if dynamic config files are enabled in the main config, read them
 		if ($this->query_option('configfiles.enabled',false)===true) {
 			$fname=$this->query_option('configfiles.filename','.h5ai.json');
@@ -66,8 +75,31 @@ class Context {
     }
 
     public function get_types() {
-        return Json::load($this->setup->get('CONF_PATH') . '/types.json');
+        return ($this->types=Json::load($this->setup->get('CONF_PATH') . '/types.json'));
     }
+
+	public function get_type($path) {
+		if (preg_match('_/$_',$path) || is_dir($path)) return 'folder';
+
+		if ($this->types==null) $this->get_types();
+		if ($this->regexps==null) $this->regexps=array_map(function ($v) {
+			return '/^('.implode('|',str_replace(
+				['.',	'*',	'?'],
+				['\.',	'.*',	'.'],
+				$v)).')$/i';
+			}, $this->types);
+
+		$name=basename($path);
+		foreach($this->regexps as $k=>$v)
+			if (preg_match($v,$name)) return $k;
+	    return 'file';
+	}
+	
+	public function get_thumbnailtype($path) {
+		$type=$this->get_type($path);
+		foreach($this->thumbnailtypes as $k => $v) if (in_array($type, $v)) return $k;
+		return null;	
+	}
 
     public function login_admin($pass) {
         $this->session->set(Context::$AS_ADMIN_SESSION_KEY, strcasecmp(hash('sha512', $pass), $this->passhash) === 0);

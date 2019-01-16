@@ -1,3 +1,4 @@
+/* h5ai v0.30.0 - https://github.com/badda71/h5ai */
 {
     /*
     Password hash.
@@ -151,7 +152,7 @@
     - ignorecase: boolean, ignore case
     */
     "filter": {
-        "enabled": false,
+        "enabled": true,
         "advanced": true,
         "debounceTime": 100,
         "ignorecase": true
@@ -402,7 +403,7 @@
 		},
 		"generator-cfg": {
 			"file": {
-				"files": ["Folder.jpg","Cover.jpg"]
+				"files": ["Folder.jpg","Cover.jpg","*Front.[jJ}[pP][gG]","*.{jpg,jpeg,JPG,png,mp3,mp4,avi}","*.*","*"]
 			},
 			"tmdb": {
 				"api-key": "296d4c7bcf2b240a42cb1b64400cd176",
