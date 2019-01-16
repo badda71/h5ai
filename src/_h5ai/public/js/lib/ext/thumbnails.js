@@ -2,6 +2,7 @@ const {each, map, includes} = require('../util');
 const server = require('../server');
 const event = require('../core/event');
 const allsettings = require('../core/settings');
+const resource = require('../core/resource');
 
 const settings = Object.assign({
 	enabled: false,
@@ -26,38 +27,41 @@ const queueItem = (queue, item) => {
 		}
 	}
 	if (type==null) return;
-
+	
     if (item.thumbSquare) {
-        item.$view.find('.icon.square img').addCls('thumb').attr('src', item.thumbSquare);
+        updateItem(item, item.thumbSquare, "square")
     } else {
         queue.push({
             type,
             href: item.absHref,
             ratio: 1,
             callback: src => {
-                if (src && item.$view) {
-                    item.thumbSquare = src;
-                    item.$view.find('.icon.square img').addCls('thumb').attr('src', src);
-                }
+                if (src && item.$view) updateItem(item, src, 'square');
             }
         });
     }
 
     if (item.thumbRational) {
-        item.$view.find('.icon.landscape img').addCls('thumb').attr('src', item.thumbRational);
+        updateItem(item, item.thumbRational, 'landscape');
     } else {
         queue.push({
             type,
             href: item.absHref,
             ratio: landscapeRatio,
             callback: src => {
-                if (src && item.$view) {
-                    item.thumbRational = src;
-                    item.$view.find('.icon.landscape img').addCls('thumb').attr('src', src);
-                }
+                if (src && item.$view) updateItem(item, src, 'landscape');
             }
         });
     }
+};
+
+const updateItem = (item, src, format='square') => {
+	if (format=='square') item.thumbSquare = src;
+	else item.thumbRational = src;
+	const img=item.$view.find('.icon.'+format+' img');
+	const icon=img.src;	
+	img.addCls('thumb').attr('src', src);
+	img.parent().addCls('icon-overlay');
 };
 
 const requestQueue = queue => {
@@ -103,6 +107,31 @@ const init = () => {
     if (!settings.enabled) {
         return;
     }
+
+	// generate my thumbnail overlay styles
+	let styleHtml="";
+	for(let i in settings.types) {
+		let baseType = (settings.types[i][0]).split('-')[0];
+		for (let i2 in settings.types[i]) {
+			styleHtml+= `${i2!=0?',':''}
+				#view.view-icons .icon-overlay.${settings.types[i][i2]}::before`;
+		}
+		styleHtml+= ` {
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					transform: translate(-50%, -50%);
+					-webkit-transform: translate(-50%, -50%);
+					content: " ";
+					z-index: 1;
+					background: url(${resource.icon(baseType)}) bottom right no-repeat;
+					width: 100%;
+					height: 100%;
+				}`;
+	}
+	let sheet = document.createElement('style');
+	sheet.innerHTML = styleHtml;
+	document.body.appendChild(sheet);
 
     event.sub('view.changed', onViewChanged);
 };
